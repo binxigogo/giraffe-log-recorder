@@ -37,6 +37,7 @@ public class LogRecoderConfig {
 				LogRecoderConfig.class);
 		UserController userController = applicationContext.getBean(UserController.class);
 		userController.add(new User("张三", 20));
+		userController.get();
 		applicationContext.close();
 	}
 }

@@ -8,4 +8,10 @@ public class UserController {
 		System.out.println("增加用户");
 		return true;
 	}
+	
+	@Log(code = "10002")
+	public String get() {
+		System.out.println("-----get-----");
+		return "hello world!";
+	}
 }
