@@ -85,7 +85,7 @@
     }
     
 2、增加日志注解
-在需要记录日志方法上增加@Log注解，需要注意的是需要记录日志的类必须是Spring中的bean。
+在需要记录日志方法上增加@Log注解，需要注意的是需要记录日志的类必须是Spring容器管理的bean。
     
     public class UserController {
         @Log(code = "10001")
