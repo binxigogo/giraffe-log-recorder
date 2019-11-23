@@ -36,8 +36,12 @@ public class LogRecoderConfig {
 		AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext(
 				LogRecoderConfig.class);
 		UserController userController = applicationContext.getBean(UserController.class);
-		userController.add(new User("张三", 20));
+		long start = System.currentTimeMillis();
+		userController.add(new User("张三", 20), null);
 		userController.get();
+		userController.toAdd("abcdefg");
+		userController.exception("987654321");
+		System.out.println("用时：" + (System.currentTimeMillis() - start));
 		applicationContext.close();
 	}
 }
