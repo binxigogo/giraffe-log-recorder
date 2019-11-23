@@ -2,6 +2,10 @@ package pre.binxigogo.log;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -9,6 +13,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 
+import pre.binxigogo.log.annotation.IgnoreParam;
 import pre.binxigogo.log.annotation.Log;
 import pre.binxigogo.log.annotation.LogPoint;
 import pre.binxigogo.log.annotation.LogPointPosition;
@@ -31,47 +36,97 @@ public class LogAspect {
 	@Around("pointCut()")
 	public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
 		MethodSignature signature = (MethodSignature) joinPoint.getSignature();
-		String methodName = signature.getMethod().getName();
-		Log log = getLog(signature.getMethod());
+		Method method = signature.getMethod();
+		Log log = getLog(method);
 		Object[] args = joinPoint.getArgs();
 		String[] parameterNames = signature.getParameterNames();
 		String className = joinPoint.getTarget().getClass().getName();
-		beforeLog(log, className, methodName, parameterNames, args);
+		Set<Integer> ignoreMethodParameterPos = getIgnoreMethodParameterPos(method);
+		String methodName = method.getName();
+		// 方法执行之前记录日志
+		beforeLog(log, className, methodName, parameterNames, args, ignoreMethodParameterPos);
 		Object result = null;
 		try {
 			result = joinPoint.proceed();
-			afterLog(log, className, methodName, parameterNames, args, result);
+			// 方法执行之后记录日志
+			afterLog(log, className, methodName, parameterNames, args, result, ignoreMethodParameterPos);
 		} catch (Throwable t) {
-			exceptionLog(log, className, methodName, parameterNames, args, t);
+			// 方法抛出异常记录日志
+			exceptionLog(log, className, methodName, parameterNames, args, t, ignoreMethodParameterPos);
 			throw t;
 		}
 		return result;
 	}
 
-	private void beforeLog(Log log, String className, String methodName, String[] parameterNames, Object[] args) {
-		log(LogPointPosition.BEFORE, log, className, methodName, parameterNames, args, null, null);
+	private Set<Integer> getIgnoreMethodParameterPos(Method method) {
+		Annotation[][] parameterAnnotations = method.getParameterAnnotations();
+		Set<Integer> ignoreMethodParameterPos = new HashSet<>();
+		for (int i = 0; i < parameterAnnotations.length; i++) {
+			if (isContainAnnotation(parameterAnnotations[i], IgnoreParam.class)) {
+				ignoreMethodParameterPos.add(i);
+				break;
+			}
+		}
+		return ignoreMethodParameterPos;
+	}
+
+	private boolean isContainAnnotation(Annotation[] annotations, Class<?> existAnnotation) {
+		for (Annotation annotation : annotations) {
+			if (annotation.annotationType().getName().equals(existAnnotation.getName())) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private void beforeLog(Log log, String className, String methodName, String[] parameterNames, Object[] args,
+			Set<Integer> ignoreMethodParameterPos) {
+		log(LogPointPosition.BEFORE, log, className, methodName, parameterNames, args, null, null,
+				ignoreMethodParameterPos);
 	}
 
 	private void afterLog(Log log, String className, String methodName, String[] parameterNames, Object[] args,
-			Object result) {
-		log(LogPointPosition.AFTER, log, className, methodName, parameterNames, args, result, null);
+			Object result, Set<Integer> ignoreMethodParameterPos) {
+		log(LogPointPosition.AFTER, log, className, methodName, parameterNames, args, result, null,
+				ignoreMethodParameterPos);
 	}
 
 	private void exceptionLog(Log log, String className, String methodName, String[] parameterNames, Object[] args,
-			Throwable t) {
-		log(LogPointPosition.EXCEPTION, log, className, methodName, parameterNames, args, null, t);
+			Throwable t, Set<Integer> ignoreMethodParameterPos) {
+		log(LogPointPosition.EXCEPTION, log, className, methodName, parameterNames, args, null, t,
+				ignoreMethodParameterPos);
 	}
 
 	private void log(LogPointPosition logPointPosition, Log log, String className, String methodName,
-			String[] parameterNames, Object[] args, Object result, Throwable t) {
+			String[] parameterNames, Object[] args, Object result, Throwable t, Set<Integer> ignoreMethodParameterPos) {
 		LogPoint logPoint = containPoint(log.points(), logPointPosition);
 		if (logPoint != null) {
-			format(log, logPoint, className, methodName, parameterNames, args, result, t);
+			format(log, logPoint, className, methodName, parameterNames, args, result, t, ignoreMethodParameterPos);
 		}
 	}
 
-	private void format(Log log, LogPoint logPoint, String className, String methodName, String[] parameterNames, Object[] args,
-			Object result, Throwable t) {
+	private void format(Log log, LogPoint logPoint, String className, String methodName, String[] parameterNames,
+			Object[] args, Object result, Throwable t, Set<Integer> ignoreMethodParameterPos) {
+		// 如果有需要忽略的方法参数，重新组装参数名称和参数值数组
+		if (!ignoreMethodParameterPos.isEmpty()) {
+			int noneIgnoreParamNum = parameterNames.length - ignoreMethodParameterPos.size();
+			if (noneIgnoreParamNum > 0) {
+				List<String> parameterNameList = new ArrayList<>(noneIgnoreParamNum);
+				List<Object> argsList = new ArrayList<Object>(noneIgnoreParamNum);
+				for (int i = 0; i < parameterNames.length; i++) {
+					if (!ignoreMethodParameterPos.contains(i)) {
+						parameterNameList.add(parameterNames[i]);
+						argsList.add(args[i]);
+					}
+				}
+				parameterNames = parameterNameList.toArray(new String[noneIgnoreParamNum]);
+				args = argsList.toArray(new Object[noneIgnoreParamNum]);
+			} else {
+				parameterNames = new String[] {};
+				args = new Object[] {};
+			}
+
+		}
 		String msg = logMessageFormatter.format(log, className, methodName, parameterNames, args, result);
 		switch (logPoint.level()) {
 		case INFO:
@@ -102,11 +157,6 @@ public class LogAspect {
 	}
 
 	private Log getLog(Method method) {
-		Annotation[] declaredAnnotations = method.getDeclaredAnnotations();
-		System.out.println("get annotation");
-		for (Annotation annotation : declaredAnnotations) {
-			System.out.println(annotation.getClass().getName());
-		}
 		return method.getAnnotation(Log.class);
 	}
 }
