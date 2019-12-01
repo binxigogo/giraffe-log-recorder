@@ -2,6 +2,12 @@ package pre.binxigogo.log.format;
 
 import pre.binxigogo.log.UserPicker;
 
+/**
+ * 抽象日志消息格式化器
+ * 
+ * @author wangguobin
+ *
+ */
 public abstract class AbstractLogMessageFormatter implements LogMessageFormatter {
 	private UserPicker userPicker;
 
