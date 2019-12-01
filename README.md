@@ -4,13 +4,8 @@
 1、建立配置类
 
     @Configuration
-    @EnableLogRecord
+    @EnableLogRecord(logAdapter =  pre.binxigogo.log.adapter.Slf4jAdapter.class)
     public class LogRecoderConfig{
-      //配置logger适配器
-      @Bean
-      public Logger logger() {
-        return new Slf4jAdapter(LoggerFactory.getLogger(LogRecoderConfig.class));
-      }
       //配置LogMessageFormatter格式化器
       @Bean
       public LogMessageFormatter logMessageFormatter() {
@@ -19,14 +14,15 @@
       }
     }
 
-在配置类中首先需要在类上增加@EnableLogRecord开启日志记录；
+在配置类中首先需要在类上增加@EnableLogRecord开启日志记录并指定对应的日志适配器，需要注意的是同一项目下不允许存在多个不同类型的日志适配器；
 增加Logger适配器，开发人员可以跟据自身需要增加不同日志框架的适配器，增加方式如下：
 
-    public class XXXAdapter implements Logger {
+    public class Slf4jAdapter extends AbstractLogAdapter {
 	    private xxx.zzz.Logger logger;
 
-        public XXXAdapter(xxx.zzz.Logger logger) {
-            this.logger = logger;
+        public XXXAdapter(String className) {
+            super(className);
+            this.logger = xxx.zzz.LoggerFactory.getLogger(className);
         }
 
         public void trace(String msg) {
