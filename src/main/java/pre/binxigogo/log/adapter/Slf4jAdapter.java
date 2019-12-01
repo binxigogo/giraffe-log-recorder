@@ -1,18 +1,17 @@
 package pre.binxigogo.log.adapter;
 
-import pre.binxigogo.log.Logger;
-
 /**
  * Slf4j日志适配器，日志文件配置方式与直接使用Slf4j一致
  * 
  * @author wangguobin
  *
  */
-public class Slf4jAdapter implements Logger {
+public class Slf4jAdapter extends AbstractLogAdapter {
 	private org.slf4j.Logger logger;
 
-	public Slf4jAdapter(org.slf4j.Logger logger) {
-		this.logger = logger;
+	public Slf4jAdapter(String className) {
+		super(className);
+		this.logger = org.slf4j.LoggerFactory.getLogger(className);
 	}
 
 	public void trace(String msg) {
