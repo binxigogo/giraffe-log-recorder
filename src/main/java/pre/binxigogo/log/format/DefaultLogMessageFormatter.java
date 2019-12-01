@@ -14,8 +14,8 @@ public class DefaultLogMessageFormatter extends AbstractLogMessageFormatter {
 	public String format(Log log, String className, String methodName, String[] parameterNames, Object[] args,
 			Object result) {
 		Optional<Object> resultOpt = Optional.ofNullable(result);
-		return MessageFormat.format("[{0}-{1}] {2} {3} [{4}] [{5}]", className, methodName, log.code(),
-				getUserPicker().getUser(), wrapParameter(parameterNames, args), resultOpt.orElse(""));
+		return MessageFormat.format("{0} {1} [{2}] [{3}]", log.code(), getUserPicker().getUser(),
+				wrapParameter(parameterNames, args), resultOpt.orElse(""));
 	}
 
 	private String wrapParameter(String[] parameterNames, Object[] args) {
