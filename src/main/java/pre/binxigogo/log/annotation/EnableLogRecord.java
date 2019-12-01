@@ -14,6 +14,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 
+import pre.binxigogo.log.adapter.AbstractLogAdapter;
+
 /**
  * 统一日志记录启用注解，处理标记@{@link Log}方法上的日志注解。@{@link Log} 方法所在类必须是一个Spring组件类，
  * 支持Spring采用各种方式的组件，包括不限于@{@link Component}、@{@link Repository}、@{@link Service}、@{@link Controller}、、@{@link Bean}等。
@@ -22,7 +24,7 @@ import org.springframework.stereotype.Service;
  * <pre>
  * &#064;Configuration
  * // 增加统一日志记录启动注解
- * &#064;EnableLogRecord
+ * &#064;EnableLogRecord(logAdapter =  pre.binxigogo.log.adapter.Slf4jAdapter.class)
  * &#064;Import(value = { UserController.class })
  * public class LogRecoderConfig {
  * 	// 配置logger适配器
@@ -69,4 +71,5 @@ import org.springframework.stereotype.Service;
 @EnableAspectJAutoProxy
 @Import(value = LogRecordRegistrar.class)
 public @interface EnableLogRecord {
+	Class<? extends AbstractLogAdapter> logAdapter();
 }
