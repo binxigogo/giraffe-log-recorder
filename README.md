@@ -4,7 +4,7 @@
 1、建立配置类
 
     @Configuration
-    @EnableLogRecord(logAdapter =  pre.binxigogo.log.adapter.Slf4jAdapter.class)
+    @EnableLogRecord
     public class LogRecoderConfig{
       //配置LogMessageFormatter格式化器
       @Bean
@@ -12,59 +12,14 @@
         // 指定UserPicker，可以根据实际情况得到用户，例如：你可以通过自定义UserPicker实现类得到当前登录用户信息
         return new DefaultLogMessageFormatter(() -> "admin");
       }
+      // 配置自己的LogFactory
+      @Bean
+      public LogFactory logFactory() {
+          // 可以根据自己的日志框架，返回对应的日志工厂
+          return new Slf4jLogFactory();
+      }
     }
 
-在配置类中首先需要在类上增加@EnableLogRecord开启日志记录并指定对应的日志适配器，需要注意的是同一项目下不允许存在多个不同类型的日志适配器；
-增加Logger适配器，开发人员可以跟据自身需要增加不同日志框架的适配器，增加方式如下：
-
-    public class Slf4jAdapter extends AbstractLogAdapter {
-	    private xxx.zzz.Logger logger;
-
-        public XXXAdapter(String className) {
-            super(className);
-            this.logger = xxx.zzz.LoggerFactory.getLogger(className);
-        }
-
-        public void trace(String msg) {
-            logger.trace(msg);
-        }
-
-        public void trace(String msg, Throwable t) {
-            logger.trace(msg, t);
-        }
-
-        public void debug(String msg) {
-            logger.debug(msg);
-        }
-
-        public void debug(String msg, Throwable t) {
-            logger.debug(msg, t);
-        }
-
-        public void info(String msg) {
-            logger.info(msg);
-        }
-
-        public void info(String msg, Throwable t) {
-            logger.info(msg, t);
-        }
-
-        public void warn(String msg) {
-            logger.warn(msg);
-        }
-
-        public void warn(String msg, Throwable t) {
-            logger.warn(msg, t);
-        }
-
-        public void error(String msg) {
-            logger.error(msg);
-        }
-
-        public void error(String msg, Throwable t) {
-            logger.error(msg, t);
-        }
-    }
 
 增加日志化格式器，giraffe-log-recoder实现了一个默认的格式化器DefaultLogMessageFormatter，开发人员可以定制自己的日志格式化器，自定义方式如下：
    
