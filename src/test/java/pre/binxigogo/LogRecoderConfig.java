@@ -5,6 +5,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
+import pre.binxigogo.log.LogFactory;
+import pre.binxigogo.log.adapter.slf4j.Slf4jLogFactory;
 import pre.binxigogo.log.annotation.EnableLogRecord;
 import pre.binxigogo.log.format.DefaultLogMessageFormatter;
 import pre.binxigogo.log.format.LogMessageFormatter;
@@ -14,7 +16,7 @@ import pre.binxigogo.module.user.UserController;
 
 @Configuration
 // 增加统一日志记录启动注解
-@EnableLogRecord(logAdapter =  pre.binxigogo.log.adapter.Slf4jAdapter.class)
+@EnableLogRecord
 @Import(value = { UserController.class, DeptController.class })
 public class LogRecoderConfig {
 	//配置LogMessageFormatter格式化器
@@ -22,6 +24,11 @@ public class LogRecoderConfig {
 	public LogMessageFormatter logMessageFormatter() {
 		// 指定UserPicker，可以根据实际情况得到用户，例如：你可以通过自定义UserPicker实现类得到当前登录用户信息
 		return new DefaultLogMessageFormatter(() -> "admin");
+	}
+
+	@Bean
+	public LogFactory logFactory() {
+		return new Slf4jLogFactory();
 	}
 
 	public static void main(String[] args) {

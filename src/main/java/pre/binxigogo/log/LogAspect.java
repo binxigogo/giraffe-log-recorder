@@ -15,7 +15,6 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 
-import pre.binxigogo.log.adapter.LogAdaptManager;
 import pre.binxigogo.log.annotation.IgnoreParam;
 import pre.binxigogo.log.annotation.Log;
 import pre.binxigogo.log.annotation.LogPoint;
@@ -25,12 +24,12 @@ import pre.binxigogo.log.format.LogMessageFormatter;
 @Aspect
 public class LogAspect {
 	private static final Map<String, Logger> classLoggers = new ConcurrentHashMap<>();
-	private LogAdaptManager logAdaptManager;
 	private LogMessageFormatter logMessageFormatter;
+	private LogFactory logFactory;
 
-	public LogAspect(LogAdaptManager logAdaptManager, LogMessageFormatter logMessageFormatter) {
+	public LogAspect(LogFactory logFactory, LogMessageFormatter logMessageFormatter) {
+		this.logFactory = logFactory;
 		this.logMessageFormatter = logMessageFormatter;
-		this.logAdaptManager = logAdaptManager;
 	}
 
 	@Pointcut(value = "@annotation(pre.binxigogo.log.annotation.Log)")
@@ -78,7 +77,7 @@ public class LogAspect {
 	private Logger getLogger(String className) {
 		Logger logger = classLoggers.get(className);
 		if (logger == null) {
-			logger = logAdaptManager.getLogger(className);
+			logger = logFactory.getLogger(className);
 			classLoggers.put(className, logger);
 		}
 		return logger;
